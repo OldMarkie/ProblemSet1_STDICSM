@@ -3,8 +3,11 @@
 #include <sstream>
 #include <thread>
 #include <iostream>
+#include <mutex>
 
 using namespace std;
+
+std::mutex coutMutex;
 
 vector<vector<int>> MatrixMultiplier::readMatrix(ifstream& in) {
     vector<vector<int>> matrix;
@@ -34,6 +37,7 @@ void MatrixMultiplier::multiplyRow(const vector<vector<int>>& A,
         C[row][j] = sum;
 
         // Debug
+        std::lock_guard<std::mutex> guard(coutMutex);
         cout << "Thread " << row
             << " computed C[" << row << "][" << j
             << "] = " << C[row][j] << "\n";
@@ -43,9 +47,33 @@ void MatrixMultiplier::multiplyRow(const vector<vector<int>>& A,
 
 vector<vector<int>> MatrixMultiplier::multiply(const vector<vector<int>>& A,
     const vector<vector<int>>& B) {
-    if (A.empty() || B.empty() || A[0].size() != B.size()) {
-        throw invalid_argument("Error: Invalid matrix dimensions for multiplication.");
+
+    if (A.empty() || B.empty()) {
+        throw invalid_argument("Error: One of the matrices is empty.");
     }
+
+    // Check A if all rows same length
+    size_t aCols = A[0].size();
+    for (const auto& row : A) {
+        if (row.size() != aCols) {
+            throw invalid_argument("Error: Matrix A is not rectangular.");
+        }
+    }
+
+    // Check B if all rows same length
+    size_t bCols = B[0].size();
+    for (const auto& row : B) {
+        if (row.size() != bCols) {
+            throw invalid_argument("Error: Matrix B is not rectangular.");
+        }
+    }
+
+    // Check multiplication rule: A = m * k, B = k * n
+    if (aCols != B.size()) {
+        throw invalid_argument("Error: Invalid dimensions. "
+            "Matrix A columns must equal Matrix B rows.");
+    }
+
 
     int m = A.size();
     int n = B[0].size();
