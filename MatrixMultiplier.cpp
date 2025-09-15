@@ -72,6 +72,9 @@ vector<vector<double>> MatrixMultiplier::multiplyParallel(
     const vector<vector<double>>& A,
     const vector<vector<double>>& B)
 {
+    int numThreads = 4;
+    int blockSize = 64;
+
     if (A.empty() || B.empty())
         throw invalid_argument("Error: One of the matrices is empty.");
 
@@ -85,14 +88,44 @@ vector<vector<double>> MatrixMultiplier::multiplyParallel(
     int n = bCols;
     vector<vector<double>> C(m, vector<double>(n, 0.0));
 
+    // Worker for a block
+    auto worker = [&](int rowStart, int rowEnd, int colStart, int colEnd) {
+        for (int i = rowStart; i < rowEnd; i++) {
+            for (int j = colStart; j < colEnd; j++) {
+                double sum = 0.0;
+                for (int k = 0; k < aCols; k++) {
+                    sum += A[i][k] * B[k][j];
+                }
+                C[i][j] = sum;
+            }
+        }
+        };
+
     vector<thread> threads;
-    for (int i = 0; i < m; i++) {
-        threads.emplace_back(multiplyRow, cref(A), cref(B), ref(C), i);
+
+    // Divide the result C into blocks
+    for (int row = 0; row < m; row += blockSize) {
+        for (int col = 0; col < n; col += blockSize) {
+            int rowEnd = min(row + blockSize, m);
+            int colEnd = min(col + blockSize, n);
+
+            // If too many threads are active, wait for them to finish
+            if (threads.size() >= (size_t)numThreads) {
+                for (auto& t : threads) t.join();
+                threads.clear();
+            }
+
+            // Spawn a thread for this block
+            threads.emplace_back(worker, row, rowEnd, col, colEnd);
+        }
     }
+
+    // Join remaining threads
     for (auto& t : threads) t.join();
 
     return C;
 }
+
 
 void MatrixMultiplier::writeMatrix(const vector<vector<double>>& matrix,
     const string& filename) {
