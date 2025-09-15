@@ -1,8 +1,10 @@
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
+#include <chrono>
 #include "MatrixMultiplier.h"
 
 using namespace std;
+using namespace std::chrono;
 
 int main() {
     ifstream input("input.txt");
@@ -16,8 +18,23 @@ int main() {
     input.close();
 
     try {
-        auto C = MatrixMultiplier::multiply(A, B);
-        MatrixMultiplier::writeMatrix(C, "output.txt");
+        // Standard version timing
+        auto start1 = high_resolution_clock::now();
+        auto C1 = MatrixMultiplier::multiplyStandard(A, B);
+        auto end1 = high_resolution_clock::now();
+        auto duration1 = duration_cast<microseconds>(end1 - start1).count();
+
+        // Multithreaded version timing
+        auto start2 = high_resolution_clock::now();
+        auto C2 = MatrixMultiplier::multiplyParallel(A, B);
+        auto end2 = high_resolution_clock::now();
+        auto duration2 = duration_cast<microseconds>(end2 - start2).count();
+
+        cout << "Standard Running time: " << duration1 << " microsecond\n";
+        cout << "Multithreaded Running time: " << duration2 << " microsecond\n";
+
+        // Save multithreaded result only
+        MatrixMultiplier::writeMatrix(C2, "output.txt");
         cout << "Matrix multiplication completed. Result saved to output.txt\n";
     }
     catch (const exception& e) {
