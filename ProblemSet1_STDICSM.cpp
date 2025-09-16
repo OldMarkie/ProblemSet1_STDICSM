@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <fstream>
 #include <chrono>
+#include <thread>
 #include "MatrixMultiplier.h"
 
 using namespace std;
@@ -18,6 +19,13 @@ int main() {
     input.close();
 
     try {
+        unsigned int hwThreads = std::thread::hardware_concurrency();
+        if (hwThreads == 0)
+            std::cout << "Could not detect hardware concurrency." << std::endl;
+        else
+            std::cout << "Hardware concurrency (threads available): "
+            << hwThreads << std::endl;
+
         // Standard version timing
         auto start1 = high_resolution_clock::now();
         auto C1 = MatrixMultiplier::multiplyStandard(A, B);

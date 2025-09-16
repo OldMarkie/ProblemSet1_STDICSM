@@ -72,9 +72,6 @@ vector<vector<double>> MatrixMultiplier::multiplyParallel(
     const vector<vector<double>>& A,
     const vector<vector<double>>& B)
 {
-    int numThreads = 4;
-    int blockSize = 64;
-
     if (A.empty() || B.empty())
         throw invalid_argument("Error: One of the matrices is empty.");
 
@@ -84,14 +81,24 @@ vector<vector<double>> MatrixMultiplier::multiplyParallel(
     if (aCols != B.size())
         throw invalid_argument("Error: Invalid dimensions. Matrix A columns must equal Matrix B rows.");
 
-    int m = A.size();
-    int n = bCols;
+    int m = A.size();        // rows of A
+    int n = bCols;           // cols of B
+
+    // Use hardware concurrency
+    unsigned int hwThreads = std::thread::hardware_concurrency();
+    if (hwThreads == 0) hwThreads = 2; // fallback if not detectable
+
+    int numThreads = std::min<int>(m, hwThreads);
+
+    // Block size (divide rows evenly among threads)
+    int blockSize = (m + numThreads - 1) / numThreads;
+
     vector<vector<double>> C(m, vector<double>(n, 0.0));
 
-    // Worker for a block
-    auto worker = [&](int rowStart, int rowEnd, int colStart, int colEnd) {
+    // Worker
+    auto worker = [&](int rowStart, int rowEnd) {
         for (int i = rowStart; i < rowEnd; i++) {
-            for (int j = colStart; j < colEnd; j++) {
+            for (int j = 0; j < n; j++) {
                 double sum = 0.0;
                 for (int k = 0; k < aCols; k++) {
                     sum += A[i][k] * B[k][j];
@@ -103,28 +110,21 @@ vector<vector<double>> MatrixMultiplier::multiplyParallel(
 
     vector<thread> threads;
 
-    // Divide the result C into blocks
-    for (int row = 0; row < m; row += blockSize) {
-        for (int col = 0; col < n; col += blockSize) {
-            int rowEnd = min(row + blockSize, m);
-            int colEnd = min(col + blockSize, n);
-
-            // If too many threads are active, wait for them to finish
-            if (threads.size() >= (size_t)numThreads) {
-                for (auto& t : threads) t.join();
-                threads.clear();
-            }
-
-            // Spawn a thread for this block
-            threads.emplace_back(worker, row, rowEnd, col, colEnd);
+    // Launch threads
+    for (int t = 0; t < numThreads; t++) {
+        int rowStart = t * blockSize;
+        int rowEnd = min(rowStart + blockSize, m);
+        if (rowStart < m) {
+            threads.emplace_back(worker, rowStart, rowEnd);
         }
     }
 
-    // Join remaining threads
     for (auto& t : threads) t.join();
 
     return C;
 }
+
+
 
 
 void MatrixMultiplier::writeMatrix(const vector<vector<double>>& matrix,
