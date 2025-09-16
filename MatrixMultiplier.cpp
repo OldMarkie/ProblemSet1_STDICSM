@@ -84,18 +84,15 @@ vector<vector<double>> MatrixMultiplier::multiplyParallel(
     int m = A.size();        // rows of A
     int n = bCols;           // cols of B
 
-    // Use hardware concurrency
     unsigned int hwThreads = std::thread::hardware_concurrency();
-    if (hwThreads == 0) hwThreads = 2; // fallback if not detectable
+    if (hwThreads == 0) hwThreads = 2; 
 
     int numThreads = std::min<int>(m, hwThreads);
 
-    // Block size (divide rows evenly among threads)
     int blockSize = (m + numThreads - 1) / numThreads;
 
     vector<vector<double>> C(m, vector<double>(n, 0.0));
 
-    // Worker
     auto worker = [&](int rowStart, int rowEnd) {
         for (int i = rowStart; i < rowEnd; i++) {
             for (int j = 0; j < n; j++) {
@@ -110,7 +107,6 @@ vector<vector<double>> MatrixMultiplier::multiplyParallel(
 
     vector<thread> threads;
 
-    // Launch threads
     for (int t = 0; t < numThreads; t++) {
         int rowStart = t * blockSize;
         int rowEnd = min(rowStart + blockSize, m);
