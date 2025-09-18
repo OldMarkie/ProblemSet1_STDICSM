@@ -10,6 +10,8 @@ using namespace std;
 
 std::mutex coutMutex;
 
+static const int MAX_DIM = 1000;
+
 vector<vector<double>> MatrixMultiplier::readMatrix(ifstream& in) {
     vector<vector<double>> matrix;
     string line;
@@ -19,7 +21,16 @@ vector<vector<double>> MatrixMultiplier::readMatrix(ifstream& in) {
         vector<double> row;
         double val;
         while (ss >> val) row.push_back(val);
+
+        if ((int)row.size() > MAX_DIM) {
+            throw invalid_argument("Error: Matrix exceeds maximum column size of 1000.");
+        }
+
         matrix.push_back(row);
+
+        if ((int)matrix.size() > MAX_DIM) {
+            throw invalid_argument("Error: Matrix exceeds maximum row size of 1000.");
+        }
     }
     return matrix;
 }
@@ -53,20 +64,6 @@ vector<vector<double>> MatrixMultiplier::multiplyStandard(
     return C;
 }
 
-void MatrixMultiplier::multiplyRow(const vector<vector<double>>& A,
-    const vector<vector<double>>& B,
-    vector<vector<double>>& C,
-    int row) {
-    int n = B[0].size();
-    int k = B.size();
-    for (int j = 0; j < n; j++) {
-        double sum = 0;
-        for (int x = 0; x < k; x++) {
-            sum += A[row][x] * B[x][j];
-        }
-        C[row][j] = sum;
-    }
-}
 
 vector<vector<double>> MatrixMultiplier::multiplyParallel(
     const vector<vector<double>>& A,

@@ -8,17 +8,17 @@ using namespace std;
 using namespace std::chrono;
 
 int main() {
-    ifstream input("input.txt");
-    if (!input.is_open()) {
-        cerr << "Error: Could not open input file.\n";
-        return 1;
-    }
-
-    auto A = MatrixMultiplier::readMatrix(input);
-    auto B = MatrixMultiplier::readMatrix(input);
-    input.close();
-
     try {
+        ifstream input("input.txt");
+        if (!input.is_open()) {
+            cerr << "Error: Could not open input file.\n";
+            return 1;
+        }
+
+        auto A = MatrixMultiplier::readMatrix(input);
+        auto B = MatrixMultiplier::readMatrix(input);
+        input.close();
+
         unsigned int hwThreads = std::thread::hardware_concurrency();
         if (hwThreads == 0)
             std::cout << "Could not detect hardware concurrency." << std::endl;

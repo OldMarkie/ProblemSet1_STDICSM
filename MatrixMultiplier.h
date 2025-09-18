@@ -21,11 +21,4 @@ public:
     // Writes matrix to file (1 decimal place)
     static void writeMatrix(const std::vector<std::vector<double>>& matrix,
         const std::string& filename);
-
-private:
-    // Helper function for parallel row computation
-    static void multiplyRow(const std::vector<std::vector<double>>& A,
-        const std::vector<std::vector<double>>& B,
-        std::vector<std::vector<double>>& C,
-        int row);
 };
