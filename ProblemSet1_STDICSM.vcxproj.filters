@@ -31,9 +31,4 @@
     <Text Include="input.txt" />
     <Text Include="output.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\Downloads\Problem1_Analysis.xlsx">
-      <Filter>Source Files</Filter>
-    </None>
-  </ItemGroup>
 </Project>

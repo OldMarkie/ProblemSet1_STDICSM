@@ -78,35 +78,45 @@ vector<vector<double>> MatrixMultiplier::multiplyParallel(
     if (aCols != B.size())
         throw invalid_argument("Error: Invalid dimensions. Matrix A columns must equal Matrix B rows.");
 
-    int m = A.size();        // rows of A
-    int n = bCols;           // cols of B
+    int m = A.size();       
+    int n = bCols;           
+    int kDim = aCols;       
 
     unsigned int hwThreads = std::thread::hardware_concurrency();
-    if (hwThreads == 0) hwThreads = 2; 
+    if (hwThreads == 0) hwThreads = 2;
 
-    int numThreads = std::min<int>(m, hwThreads);
+    int numThreads = std::min<int>(hwThreads, m);
 
-    int blockSize = (m + numThreads - 1) / numThreads;
+    const int blockSize = 64;
 
     vector<vector<double>> C(m, vector<double>(n, 0.0));
 
-    auto worker = [&](int rowStart, int rowEnd) {
-        for (int i = rowStart; i < rowEnd; i++) {
-            for (int j = 0; j < n; j++) {
-                double sum = 0.0;
-                for (int k = 0; k < aCols; k++) {
-                    sum += A[i][k] * B[k][j];
+    auto worker = [&](int blockRowStart, int blockRowEnd) {
+        for (int ii = blockRowStart; ii < blockRowEnd; ii += blockSize) {
+            for (int jj = 0; jj < n; jj += blockSize) {
+                for (int kk = 0; kk < kDim; kk += blockSize) {
+                    // Multiply block A[ii:ii+blockSize][kk:kk+blockSize]
+                    // with block B[kk:kk+blockSize][jj:jj+blockSize]
+                    for (int i = ii; i < min(ii + blockSize, m); i++) {
+                        for (int j = jj; j < min(jj + blockSize, n); j++) {
+                            double sum = 0.0;
+                            for (int k = kk; k < min(kk + blockSize, kDim); k++) {
+                                sum += A[i][k] * B[k][j];
+                            }
+                            C[i][j] += sum;
+                        }
+                    }
                 }
-                C[i][j] = sum;
             }
         }
         };
 
     vector<thread> threads;
+    int rowsPerThread = (m + numThreads - 1) / numThreads;
 
     for (int t = 0; t < numThreads; t++) {
-        int rowStart = t * blockSize;
-        int rowEnd = min(rowStart + blockSize, m);
+        int rowStart = t * rowsPerThread;
+        int rowEnd = min(rowStart + rowsPerThread, m);
         if (rowStart < m) {
             threads.emplace_back(worker, rowStart, rowEnd);
         }
@@ -116,8 +126,6 @@ vector<vector<double>> MatrixMultiplier::multiplyParallel(
 
     return C;
 }
-
-
 
 
 void MatrixMultiplier::writeMatrix(const vector<vector<double>>& matrix,
