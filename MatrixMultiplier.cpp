@@ -145,3 +145,24 @@ void MatrixMultiplier::writeMatrix(const vector<vector<double>>& matrix,
     }
     out.close();
 }
+
+bool MatrixMultiplier::compareMatrices(
+    const vector<vector<double>>& A,
+    const vector<vector<double>>& B,
+    double epsilon)
+{
+    if (A.size() != B.size()) return false;
+    if (!A.empty() && A[0].size() != B[0].size()) return false;
+
+    for (size_t i = 0; i < A.size(); i++) {
+        for (size_t j = 0; j < A[i].size(); j++) {
+            if (fabs(A[i][j] - B[i][j]) > epsilon) {
+                cerr << "Mismatch at (" << i << ", " << j << "): "
+                    << A[i][j] << " vs " << B[i][j] << endl;
+                return false;
+            }
+        }
+    }
+    return true;
+}
+

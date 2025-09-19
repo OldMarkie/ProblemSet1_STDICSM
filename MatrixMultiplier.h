@@ -21,4 +21,10 @@ public:
     // Writes matrix to file (1 decimal place)
     static void writeMatrix(const std::vector<std::vector<double>>& matrix,
         const std::string& filename);
+
+    // Compares two matrices element-wise within a tolerance (epsilon)
+    static bool compareMatrices(
+        const std::vector<std::vector<double>>& A,
+        const std::vector<std::vector<double>>& B,
+        double epsilon = 1e-9);
 };

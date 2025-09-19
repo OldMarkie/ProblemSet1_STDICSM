@@ -9,6 +9,10 @@ using namespace std::chrono;
 
 int main() {
     try {
+        std::cout << "_-_-_-_-_-_-_-_-_-_-_-_-_-_" << std::endl;
+        std::cout << "Preprocessing" << std::endl;
+        std::cout << "_-_-_-_-_-_-_-_-_-_-_-_-_-_" << std::endl << std::endl;
+
         ifstream input("input.txt");
         if (!input.is_open()) {
             cerr << "Error: Could not open input file.\n";
@@ -21,10 +25,14 @@ int main() {
 
         unsigned int hwThreads = std::thread::hardware_concurrency();
         if (hwThreads == 0)
-            std::cout << "Could not detect hardware concurrency." << std::endl;
+            std::cout << "Could not detect hardware concurrency." << std::endl << std::endl;
         else
             std::cout << "Hardware concurrency (threads available): "
-            << hwThreads << std::endl;
+            << hwThreads << std::endl << std::endl;
+
+        std::cout << "_-_-_-_-_-_-_-_-_-_-_-_-_-_" << std::endl;
+        std::cout << "Processing" << std::endl;
+        std::cout << "_-_-_-_-_-_-_-_-_-_-_-_-_-_" << std::endl << std::endl;
 
         // Standard version timing
         auto start1 = high_resolution_clock::now();
@@ -39,7 +47,21 @@ int main() {
         auto duration2 = duration_cast<microseconds>(end2 - start2).count();
 
         cout << "Standard Running time: " << duration1 << " microsecond\n";
-        cout << "Multithreaded Running time: " << duration2 << " microsecond\n";
+        cout << "Multithreaded Running time: " << duration2 << " microsecond\n" << std::endl;
+
+        std::cout << "_-_-_-_-_-_-_-_-_-_-_-_-_-_" << std::endl;
+        std::cout << "Output" << std::endl;
+        std::cout << "_-_-_-_-_-_-_-_-_-_-_-_-_-_" << std::endl << std::endl;
+
+        //Check if both multiplication have the same output
+        bool same = MatrixMultiplier::compareMatrices(C1, C2);
+
+        if (same) {
+            cout << "Both results are identical\n";
+        }
+        else {
+            cout << "Results differ between Standard and Multithreaded\n";
+        }
 
         // Save multithreaded result only
         MatrixMultiplier::writeMatrix(C2, "output.txt");
