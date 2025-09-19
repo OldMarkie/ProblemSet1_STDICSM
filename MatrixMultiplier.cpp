@@ -97,7 +97,7 @@ vector<vector<double>> MatrixMultiplier::multiplyParallel(
                 for (int kk = 0; kk < kDim; kk += blockSize) {
                     // Multiply block A[ii:ii+blockSize][kk:kk+blockSize]
                     // with block B[kk:kk+blockSize][jj:jj+blockSize]
-                    for (int i = ii; i < min(ii + blockSize, m); i++) {
+                    for (int i = ii; i < min(ii + blockSize, blockRowEnd); i++) {
                         for (int j = jj; j < min(jj + blockSize, n); j++) {
                             double sum = 0.0;
                             for (int k = kk; k < min(kk + blockSize, kDim); k++) {
